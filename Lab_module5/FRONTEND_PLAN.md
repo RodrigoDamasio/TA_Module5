@@ -266,11 +266,11 @@ Vercel needs no secret: the Gemini key stays on Railway.
 
 ## 12. Definition of done
 
-- [ ] Every lab frontend requirement (§1), including the 4 extensions visible in the UI
-- [ ] typecheck, lint, unit/component tests (coverage ≥ 80 %), build: 0 LLM calls
-- [ ] E1–E7 pass locally against the fake backend
-- [ ] Deployed to Vercel; CORS updated on Railway; E8 passes in production
-- [ ] `frontend/DEPLOY.md` with the steps run; `frontend/README.md`; plans updated (§13)
+- [x] Every lab frontend requirement (§1), including the 4 extensions visible in the UI
+- [x] typecheck, lint, 45 unit/component tests (95 % lines), build: 0 LLM calls
+- [x] E1–E7 pass locally against the fake backend (6 tests)
+- [x] Deployed to Vercel (https://taller-research-agents.vercel.app); CORS updated on Railway; production subset 3/3 incl. E8 (0 real calls, 8 cached)
+- [x] `frontend/DEPLOY.md` with the steps run; `frontend/README.md`; plans updated (§13)
 
 ## 13. Implementation notes (deviations from this plan)
 
@@ -283,6 +283,7 @@ Implemented: typecheck and ESLint clean, **45 unit/component tests (95 % lines)*
 | `useThread` with `useState` + effect | An external store read with `useSyncExternalStore` | No hydration mismatch (the server renders an empty thread) and no setState in an effect (React 19 lint) |
 | Separate files for `DecisionEntry`, `ResultEntry`, `AgentCard`, `SourceList`, `Thread` | Kept inside `Transcript.tsx`, `AgentBoard.tsx`, `FinalAnswer.tsx`, `ResearchApp.tsx`; `ReviewView` + `FactCheckTable` in `transcript/WorkerData.tsx` | Each is a few lines; fewer files |
 | Lab 4 `Tabs` component | A small tablist shown below `lg` only; panels are hidden by CSS | The panels are laid out side by side on wide screens: one DOM, no duplicate content |
+| `next build` checks the whole project | `tsconfig.build.json` (no `tests/`, `e2e/`) via `typescript.tsconfigPath` | The first Vercel build failed: test fixtures import `../backend/samples/`, which Vercel doesn't upload |
 | E1 waits for each card to show *working* | E1 checks *working* once, then the feed's "started" / "finished" lines | The backend's SSE loop polls every 0.5 s and the fake agents answer in 0.3 s, so a short *working* state can arrive together with its result. With real calls (seconds each) every state is shown |
 
 **Bugs found by the tests and fixed:**

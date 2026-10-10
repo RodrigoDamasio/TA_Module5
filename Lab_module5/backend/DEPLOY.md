@@ -65,13 +65,16 @@ railway up --detach --service backend --environment production
 | Health check, single source of config | `/health` + `railway.json`; all settings in `app/config.py` |
 | Rollback plan | Below |
 
+## Frontend connection (2026-10-10)
+
+- Redeployed with `limits` in `/health` (needed by the UI).
+- `FRONTEND_ORIGIN=http://localhost:3000,https://taller-research-agents.vercel.app`; CORS verified on preflight, a problem response and the SSE stream ([frontend/DEPLOY.md](../frontend/DEPLOY.md)).
+
 ## Redeploy / rollback
 
 ```bash
 pytest -q && ruff check . && git commit ...        # gates + rollback point
 railway up --detach --service backend --environment production
-# after the frontend deploy:
-railway variables --set "FRONTEND_ORIGIN=http://localhost:3000,https://<vercel-domain>"
 ```
 
 Rollback: Railway dashboard → `backend` → Deployments → previous deployment → Redeploy. The volume is not affected. Runs queued or running during a redeploy are marked failed at startup ("Interrupted by a server restart").
