@@ -82,7 +82,19 @@ flowchart TB
         subgraph p4["Project: taller-codebase-rag"]
             s4["service: backend<br/>Module 4 · FastAPI"]
             vol4[("backend-volume<br/>/data · rag.db + index")]
-            s5["service: research-backend<br/>Module 5 · FastAPI · 1 replica<br/>health check /health"]
+            subgraph s5["service: research-backend · Module 5 · FastAPI · 1 replica"]
+                api5["API<br/>POST /run · SSE · /health"]
+                sup5["SUPERVISOR AGENT"]
+                res5["RESEARCHER<br/>AGENT"]
+                wri5["WRITER<br/>AGENT"]
+                rev5["REVIEWER<br/>AGENT"]
+                fc5["FACT-CHECKER<br/>AGENT (extension)"]
+                api5 --> sup5
+                sup5 --> res5
+                sup5 --> wri5
+                sup5 --> rev5
+                sup5 -.-> fc5
+            end
             vol5[("research-volume<br/>/data · research.db")]
         end
     end
@@ -91,18 +103,19 @@ flowchart TB
     wiki["📚 Wikipedia API"]
 
     browser -- "pages" --> v5
-    browser -- "REST + SSE (CORS: FRONTEND_ORIGIN)" --> s5
+    browser -- "REST + SSE (CORS: FRONTEND_ORIGIN)" --> api5
     s4 --- vol4
-    s5 --- vol5
+    api5 -- "runs · events · memory" --- vol5
     s3 --> gemini
     s4 --> gemini
-    s5 -- "GOOGLE_API_KEY" --> gemini
-    s5 -- "read-only, cached" --> wiki
-    dev -. "railway up --service research-backend" .-> s5
+    s5 -- "every agent call (GOOGLE_API_KEY)" --> gemini
+    res5 -- "read-only, cached" --> wiki
+    dev -. "railway up --service research-backend" .-> api5
     dev -. "vercel --prod" .-> v5
 
     classDef new fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#14532d
-    class v5,s5,vol5 new
+    class v5,vol5,api5,sup5,res5,wri5,rev5,fc5 new
+    style s5 fill:#f0fdf4,stroke:#15803d,stroke-width:2px
 ```
 
 | Service | Platform · place | Config |
@@ -110,6 +123,8 @@ flowchart TB
 | `research-backend` (**new**) | Railway · project `taller-codebase-rag` | `railpack.json` (uvicorn `--proxy-headers`), `railway.json` health check `/health`, volume at `/data`, 1 replica. Variables: `GOOGLE_API_KEY` (set by you), `DATABASE_PATH=/data/research.db`, `FRONTEND_ORIGIN`, `LLM_MODE=real`, model names, limits |
 | `taller-research-agents` (**new**) | Vercel | `NEXT_PUBLIC_API_URL` = the `research-backend` URL, inlined at build time |
 | `backend` (Module 4), `backend` (Module 3), their frontends | unchanged | — |
+
+The lab's four agents (Supervisor, Researcher, Writer, Reviewer — plus the Fact-Checker extension) are **components inside `research-backend`**, not separate services: each agent is a Python class with its own system prompt, and they talk through in-process function calls run by the supervisor loop. Every agent's LLM call goes to the same Gemini API with the same key. One service keeps the deploy within the free plan, and the lab does not require separate processes.
 
 Each service has its own URL, variables, volume and deploys; sharing a project only groups them in the dashboard. Deploys run from the local machine with the CLIs (as in Labs 1–4), never automatically from GitHub.
 
