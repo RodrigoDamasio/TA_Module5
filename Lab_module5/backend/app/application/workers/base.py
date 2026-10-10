@@ -15,6 +15,14 @@ from app.domain.ports import LLMClient, LLMRequest, LLMResponse, SourceDraft, To
 from app.domain.transcript import CallMeta, Source, WorkerResult
 
 CITATION = re.compile(r"\[(\d{1,3})\]")
+_CITATION_LIST = re.compile(r"\[(\d{1,3}(?:\s*,\s*\d{1,3})+)\]")
+
+
+def split_citations(text: str) -> str:
+    """'[1, 2]' → '[1][2]' (models often group citations)."""
+    return _CITATION_LIST.sub(
+        lambda m: "".join(f"[{n.strip()}]" for n in m.group(1).split(",")), text
+    )
 
 
 @dataclass(frozen=True)
@@ -102,6 +110,13 @@ def text_of(response: LLMResponse) -> str:
     return text
 
 
+def truncation(response: LLMResponse, worker: str) -> list[tuple[str, str]]:
+    """Thinking tokens count against the output limit: say so when an answer was cut off."""
+    if response.finish_reason != "max_tokens":
+        return []
+    return [(f"The {worker}'s answer was cut off at the output limit.", "truncated")]
+
+
 def clean_citations(text: str, valid: set[int]) -> tuple[str, tuple[int, ...], list[int]]:
     """Drop [n] markers that point to no known source. Returns (text, cited, unknown)."""
     cited: list[int] = []
@@ -116,7 +131,7 @@ def clean_citations(text: str, valid: set[int]) -> tuple[str, tuple[int, ...], l
         unknown.append(n)
         return ""
 
-    out = CITATION.sub(keep, text)
+    out = CITATION.sub(keep, split_citations(text))
     return out, tuple(sorted(cited)), unknown
 
 

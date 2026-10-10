@@ -188,7 +188,7 @@ class Supervisor:
         return LLMRequest(
             system=self._system(),
             messages=messages,
-            max_output_tokens=2400,
+            max_output_tokens=4096,
             thinking_budget=0,
             model=self.s.supervisor_model,
         )
@@ -199,9 +199,12 @@ class Supervisor:
         """One Supervisor call + parse; on a protocol error, ONE repair call."""
         counter = StepCounter(llm, self.output)
         user = UserMessage(self._task_prompt(run, fence))
-        reply = counter.generate(self._request([user])).text or ""
+        response = counter.generate(self._request([user]))
+        reply = response.text or ""
         try:
-            return self._parse(reply), counter.meta(self.s.supervisor_model)
+            return self._parse(reply, cut=response.finish_reason == "max_tokens"), counter.meta(
+                self.s.supervisor_model
+            )
         except ProtocolError as err:
             if budget.remaining() <= 1:  # keep the last call for the forced completion
                 return None, counter.meta(self.s.supervisor_model)
@@ -209,12 +212,17 @@ class Supervisor:
             repair = UserMessage(self.prompts.supervisor_repair(str(err)))
             again = counter.generate(self._request([user, AssistantMessage(reply, []), repair]))
             try:
-                decision = replace(self._parse(again.text or ""), repaired=True)
+                cut = again.finish_reason == "max_tokens"
+                decision = replace(self._parse(again.text or "", cut=cut), repaired=True)
             except ProtocolError:
                 return None, counter.meta(self.s.supervisor_model)
             return decision, counter.meta(self.s.supervisor_model)
 
-    def _parse(self, reply: str, workers: frozenset[str] | None = None) -> Decision:
+    def _parse(
+        self, reply: str, workers: frozenset[str] | None = None, cut: bool = False
+    ) -> Decision:
+        if cut:
+            raise ProtocolError("Your reply was cut off because it was too long; keep it shorter.")
         return parse_decision(
             reply,
             self.registry.names if workers is None else workers,
@@ -303,9 +311,10 @@ class Supervisor:
         user = (
             self._task_prompt(run, fence, forced=True) + "\n\n" + self.prompts.supervisor_forced()
         )
-        reply = counter.generate(self._request([UserMessage(user)])).text or ""
+        response = counter.generate(self._request([UserMessage(user)]))
         try:
-            decision = replace(self._parse(reply, frozenset()), forced=True)
+            cut = response.finish_reason == "max_tokens"
+            decision = replace(self._parse(response.text or "", frozenset(), cut), forced=True)
         except ProtocolError:
             run.notice(
                 "The forced reply was not a valid FINAL.",

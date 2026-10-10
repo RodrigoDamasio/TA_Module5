@@ -218,3 +218,39 @@ def test_helpers():
     counter.generate(LLMRequest("s", []))
     meta = counter.meta("m")
     assert meta.cached and meta.cached_calls == 1 and meta.real_calls == 0
+
+
+def test_topics_line_relevance_filter_and_truncation():
+    from app.application.workers.researcher import relevant, topics_of
+    from app.domain.ports import LLMResponse
+
+    assert topics_of("Topics: SQLite; PostgreSQL | 'HTTP caching'.\nCompare them.") == [
+        "SQLite",
+        "PostgreSQL",
+        "HTTP caching",
+    ]
+    assert topics_of("No topics line here") == []
+    assert relevant("Retrieval-augmented generation", "rag")
+    assert relevant("Fine-tuning (deep learning)", "fine-tuning models")
+    assert not relevant("History of Wikipedia", "rag fine-tuning")
+
+    wiki = FakeWikipedia()
+    run = ResearchRun.create(TASK, 5, False, False)
+    task = "Topics: SQLite; PostgreSQL\nCompare them for a small web app."
+    out = Researcher(PROMPTS, wiki, 3, 6000).run(task, context(run=run), FakeLLM())
+    assert [s.title for s in run.sources][:2] == ["SQLite", "PostgreSQL"]  # both sides
+    assert wiki.searches[:2] == ["SQLite", "PostgreSQL"]
+    assert out.result.data["query"] == "topics: SQLite; PostgreSQL"
+
+    class Cut(FakeLLM):
+        def generate(self, request):
+            r = super().generate(request)
+            return LLMResponse(r.text, [], None, r.usage, "max_tokens")
+
+    notes = WorkerResult("researcher", "- note [1]")
+    out = Writer(PROMPTS).run("Write.", context({"researcher": notes}, SOURCES), Cut())
+    assert ("The writer's answer was cut off at the output limit.", "truncated") in out.notices
+
+
+def test_grouped_citations_are_split():
+    assert clean_citations("a [1, 2] b [2,9]", {1, 2}) == ("a [1][2] b [2]", (1, 2), [9])

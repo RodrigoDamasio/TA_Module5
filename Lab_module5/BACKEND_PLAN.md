@@ -327,7 +327,7 @@ The Reviewer checklist (responsible AI, §11): answers the task · structure and
 
 | Step | Request (MediaWiki Action API, `https://{WIKI_LANG}.wikipedia.org/w/api.php`) |
 |---|---|
-| Query | Built **deterministically** from TASK: lowercase, drop stop words and punctuation, keep the first 8 terms. 0 hits → retry with the first 4 terms, then with the user's task (§19) |
+| Query | The Supervisor's **`Topics: A; B`** line, each topic searched separately (§19, v2). Otherwise built **deterministically** from TASK: lowercase, drop stop words, first 8 terms → 4 terms → the user's task, keeping only hits whose title matches |
 | Search | `action=query&list=search&srsearch=<q>&srlimit=3&format=json&formatversion=2` → titles + page ids (snippets ignored) |
 | Extracts | One request per page: `action=query&prop=extracts|info&explaintext=1&inprop=url&pageids=<id>&format=json&formatversion=2` → plain text, trimmed to `WIKI_MAX_CHARS_PER_PAGE` at a paragraph boundary; canonical URL from `info` |
 
@@ -828,7 +828,7 @@ railway variables --set "FRONTEND_ORIGIN=http://localhost:3000,https://<vercel-d
 
 ## 19. Implementation notes (deviations from this plan)
 
-Steps 1–6 implemented (0 real calls): 84 tests, 95% coverage, Ruff clean; a live `uvicorn` run in fake mode streamed a full run over SSE. Where the code differs from the plan above:
+Steps 1–6 implemented (0 real calls): 84 tests (87 after step 7), 95% coverage, Ruff clean; a live `uvicorn` run in fake mode streamed a full run over SSE. Where the code differs from the plan above:
 
 | Plan | Implementation | Why |
 |---|---|---|
@@ -840,4 +840,17 @@ Steps 1–6 implemented (0 real calls): 84 tests, 95% coverage, Ruff clean; a li
 | Forced prompt | Always shows "0 decisions left", whatever the trigger | Budget/protocol triggers used to show a non-zero count next to "no decisions left" |
 | Architecture: `httpx` only in `wikipedia.py` | Also in `gemini_client.py` | Copied Lab 4 adapter maps SDK `httpx` timeouts to `LLMTimeout` |
 | Evaluation secret | `eval/run.py` uses a fixed `PROMPT_SECRET` | Stable prompts → the evaluation cache stays valid across reruns |
+
+### Step 7 — first real runs (prompt v1 → v2)
+
+Real runs found what the fakes could not. The first real run (`rag-vs-finetuning`, prompt v1) **completed but failed** the evaluation:
+
+| Finding (prompt v1) | Fix (prompt v2 + code) |
+|---|---|
+| The Supervisor's TASK was full of meta-words ("Find **Wikipedia** or reliable conceptual **articles**…"), so the keyword query returned *History of Wikipedia*, *Race and intelligence*, *Criticism of Wikipedia* | The Researcher's description asks the Supervisor to start the TASK with **`Topics: A; B`**; each topic is searched **separately** and merged round-robin (comparisons get both sides — a probe showed "sqlite postgresql small web app" never returns *SQLite*). Without a Topics line, keyword hits must **match the query** (4-letter prefix, hyphen parts, acronyms: `rag` → *Retrieval-augmented generation*); meta-words added to the stop list |
+| The Writer's draft was **cut off**: on Gemini 3.x, thinking tokens count against `max_output_tokens` (1,800) | Output limits raised (Supervisor and Writer 4,096; others 3,072). A cut-off worker answer gets a `truncated` notice; a cut-off Supervisor reply is a protocol error → repair |
+| The Supervisor spent an iteration asking the Writer to "complete" its draft, then answered **without a review** | Supervisor prompt: the reviewer must check the latest draft before FINAL; research is retried at most once; never ask a worker to "continue" |
+| Citations grouped as `[1, 2]` were invisible to the checks | Normalized to `[1][2]` before validation |
+
+**Evaluation (prompt v2, `gemini-3.5-flash-lite`)** — [eval/report.md](backend/eval/report.md): **3/3 tasks passed** (`rag-vs-finetuning`, `sqlite-vs-postgres`, `http-caching-injection`); protocol valid on first try **100%** (12/12 decisions, 0 repairs); **7–8 calls per run** (target ≤ 9); the Supervisor chose **parallel** Reviewer + Fact-Checker on its own (12/12 claims supported); the injection task was flagged (`ignore_instructions`, `system_prompt`) and answered normally with no prompt text. `python-history` was not run, to stay within the agreed budget. **38 real Gemini calls** in total (9 for v1, 29 for v2 incl. one 503 retried automatically). The three passing runs are exported to `samples/runs/` (free demo replays); the report regenerates from `eval/llm_cache.db` at 0 calls.
 

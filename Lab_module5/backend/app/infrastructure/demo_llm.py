@@ -71,7 +71,8 @@ class DemoLLMClient:
         for worker in ORDER:
             if worker not in done:
                 task = {
-                    "researcher": f"Find the key facts about: {_user_task(prompt)}",
+                    "researcher": f"Topics: {_user_task(prompt)}\n"
+                    "Find the key facts for the user task.",
                     "writer": "Write a clear answer to the user task from the research notes.",
                     "reviewer": "Review the latest draft against the task and the notes.",
                 }[worker]

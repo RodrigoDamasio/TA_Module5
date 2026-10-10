@@ -1,0 +1,391 @@
+{
+  "run_id": "run_ea9de0e919ce",
+  "status": "completed",
+  "task": "When should I use RAG instead of fine-tuning?",
+  "max_iterations": 5,
+  "iteration": 4,
+  "iteration_limit": 5,
+  "final_output": "## When to Use RAG Instead of Fine-Tuning\n\nChoosing between Retrieval-Augmented Generation (RAG) and fine-tuning depends on your specific use case, particularly regarding data freshness, cost, domain adaptation, and factual accuracy. \n\n### Direct Answer\nUse RAG when your primary goal is to provide an LLM with access to external, frequently changing, or proprietary information while minimizing costs and hallucinations. Use fine-tuning when you need to adapt the model's tone, style, or behavior for specialized tasks rather than teaching it new facts.\n\n---\n\n### Key Comparison Factors\n\n#### 1. Data Freshness and Updates\n* **RAG:** This approach allows for real-time updates simply by modifying the external knowledge base (often stored via vector databases), eliminating the need to retrain the model [1].\n* **Fine-Tuning:** This method adapts a pre-trained model by updating its parameters [2]. Because updating or retraining model parameters is required for new data, fine-tuning is less suitable for frequently changing information [1][2].\n\n#### 2. Cost and Efficiency\n* **RAG:** It significantly reduces computational and financial costs compared to retraining large models [1].\n* **Fine-Tuning:** Full-model fine-tuning is computationally expensive and resource-intensive, though parameter-efficient techniques like low-rank adaptation (LoRA) and representation fine-tuning (ReFT) help lower space and compute requirements [2].\n\n#### 3. Factual Accuracy and Hallucinations\n* **RAG:** By grounding responses in external, authoritative sources, RAG improves factual accuracy and provides source transparency so users can verify information [1]. However, models can still occasionally misinterpret the retrieved context [1].\n* **Fine-Tuning:** While fine-tuning is excellent for transfer learning and teaching a model specific behaviors or downstream tasks, it can sometimes degrade robustness when faced with distribution shifts [2], and it does not inherently prevent hallucinations of factual data.\n\n#### 4. Domain Adaptation\n* **RAG:** Best suited when the model needs to reference large volumes of specific documents, unstructured data, or structured databases dynamically during inference [1][3].\n* **Fine-Tuning:** Best suited when you need to instill a specific response style, formatting structure, or specialized task capability into the model's core behavior rather than just supplying it with reference documents [2].\n\n### Sources\n1. Retrieval-augmented generation \u2014 https://en.wikipedia.org/wiki/Retrieval-augmented_generation\n2. Fine-tuning (deep learning) \u2014 https://en.wikipedia.org/wiki/Fine-tuning_(deep_learning)\n3. Vector database \u2014 https://en.wikipedia.org/wiki/Vector_database",
+  "sources": [
+    {
+      "n": 1,
+      "title": "Retrieval-augmented generation",
+      "url": "https://en.wikipedia.org/wiki/Retrieval-augmented_generation"
+    },
+    {
+      "n": 2,
+      "title": "Fine-tuning (deep learning)",
+      "url": "https://en.wikipedia.org/wiki/Fine-tuning_(deep_learning)"
+    },
+    {
+      "n": 3,
+      "title": "Vector database",
+      "url": "https://en.wikipedia.org/wiki/Vector_database"
+    }
+  ],
+  "forced": false,
+  "degraded": false,
+  "flags": [],
+  "transcript": [
+    {
+      "seq": 1,
+      "iteration": 1,
+      "kind": "decision",
+      "agent": "supervisor",
+      "task": null,
+      "text": null,
+      "flag": null,
+      "model": "gemini-3.5-flash-lite",
+      "tokens": {
+        "input": 867,
+        "output": 87,
+        "thinking": 0
+      },
+      "llm_calls": 0,
+      "cached_calls": 1,
+      "cached": true,
+      "duration_ms": 0,
+      "decision": {
+        "action": "delegate",
+        "delegations": [
+          {
+            "worker": "researcher",
+            "task": "Topics: Retrieval-augmented generation; Fine-tuning (deep learning)\nExplain the core differences between Retrieval-Augmented Generation (RAG) and fine-tuning, focusing on when to use each approach based on data freshness, cost, domain adaptation, and factual accuracy."
+          }
+        ],
+        "final": null,
+        "reason": "I need to gather research notes on Retrieval-Augmented Generation and fine-tuning to compare them.",
+        "repaired": false,
+        "forced": false,
+        "preamble_chars": 0
+      },
+      "result": null
+    },
+    {
+      "seq": 2,
+      "iteration": 1,
+      "kind": "worker_result",
+      "agent": "researcher",
+      "task": "Topics: Retrieval-augmented generation; Fine-tuning (deep learning)\nExplain the core differences between Retrieval-Augmented Generation (RAG) and fine-tuning, focusing on when to use each approach based on data freshness, cost, domain adaptation, and factual accuracy.",
+      "text": null,
+      "flag": null,
+      "model": "gemini-3.5-flash-lite",
+      "tokens": {
+        "input": 3482,
+        "output": 335,
+        "thinking": 0
+      },
+      "llm_calls": 0,
+      "cached_calls": 1,
+      "cached": true,
+      "duration_ms": 6,
+      "decision": null,
+      "result": {
+        "worker": "researcher",
+        "content": "- **Core Definition of RAG**\n  - RAG enables large language models (LLMs) to retrieve and incorporate new information from external data sources during inference [1].\n  - Uses vector databases to store embeddings of unstructured, semi-structured, or structured data for document retrieval [1][3].\n  - Reduces AI hallucinations and provides source transparency for verification [1].\n\n- **Core Definition of Fine-Tuning**\n  - Fine-tuning adapts a pre-trained model to a specific downstream task by applying additional training to its parameters (fully or partially) [2].\n  - Techniques include low-rank adaptation (LoRA) and representation fine-tuning (ReFT) for parameter efficiency [2].\n\n- **Data Freshness and Updates**\n  - RAG allows real-time updates by modifying the external knowledge base without needing to retrain the model [1].\n  - Fine-tuning requires retraining or updating model parameters, making it less suitable for frequently changing information [1][2].\n\n- **Cost and Efficiency**\n  - RAG saves computational and financial costs compared to retraining models [1].\n  - Full-model fine-tuning is computationally expensive, though parameter-efficient methods like LoRA lower space requirements [2].\n\n- **Domain Adaptation and Factual Accuracy**\n  - RAG grounds responses in external, authoritative sources to improve factual accuracy, though models can still misinterpret retrieved context [1].\n  - Fine-tuning adapts model behavior and style for specific downstream tasks using transfer learning, but can degrade robustness to distribution shifts [2].\n\nGaps: none",
+        "data": {
+          "query": "topics: Retrieval-augmented generation; Fine-tuning (deep learning)",
+          "sources": [
+            1,
+            2,
+            3
+          ]
+        },
+        "sources": [
+          1,
+          2,
+          3
+        ],
+        "unsourced": false,
+        "failed": false
+      }
+    },
+    {
+      "seq": 3,
+      "iteration": 2,
+      "kind": "decision",
+      "agent": "supervisor",
+      "task": null,
+      "text": null,
+      "flag": null,
+      "model": "gemini-3.5-flash-lite",
+      "tokens": {
+        "input": 1321,
+        "output": 65,
+        "thinking": 0
+      },
+      "llm_calls": 0,
+      "cached_calls": 1,
+      "cached": true,
+      "duration_ms": 0,
+      "decision": {
+        "action": "delegate",
+        "delegations": [
+          {
+            "worker": "writer",
+            "task": "Write an explanation of when to use RAG instead of fine-tuning based on the research notes, covering data freshness, cost, domain adaptation, and factual accuracy, while keeping the [n] citations."
+          }
+        ],
+        "final": null,
+        "reason": "Delegate the drafting task to the writer using the research notes.",
+        "repaired": false,
+        "forced": false,
+        "preamble_chars": 0
+      },
+      "result": null
+    },
+    {
+      "seq": 4,
+      "iteration": 2,
+      "kind": "worker_result",
+      "agent": "writer",
+      "task": "Write an explanation of when to use RAG instead of fine-tuning based on the research notes, covering data freshness, cost, domain adaptation, and factual accuracy, while keeping the [n] citations.",
+      "text": null,
+      "flag": null,
+      "model": "gemini-3.5-flash-lite",
+      "tokens": {
+        "input": 797,
+        "output": 498,
+        "thinking": 0
+      },
+      "llm_calls": 0,
+      "cached_calls": 1,
+      "cached": true,
+      "duration_ms": 0,
+      "decision": null,
+      "result": {
+        "worker": "writer",
+        "content": "## When to Use RAG Instead of Fine-Tuning\n\nChoosing between Retrieval-Augmented Generation (RAG) and fine-tuning depends on your specific use case, particularly regarding data freshness, cost, domain adaptation, and factual accuracy. \n\n### Direct Answer\nUse RAG when your primary goal is to provide an LLM with access to external, frequently changing, or proprietary information while minimizing costs and hallucinations. Use fine-tuning when you need to adapt the model's tone, style, or behavior for specialized tasks rather than teaching it new facts.\n\n---\n\n### Key Comparison Factors\n\n#### 1. Data Freshness and Updates\n* **RAG:** This approach allows for real-time updates simply by modifying the external knowledge base (often stored via vector databases), eliminating the need to retrain the model [1].\n* **Fine-Tuning:** This method adapts a pre-trained model by updating its parameters [2]. Because updating or retraining model parameters is required for new data, fine-tuning is less suitable for frequently changing information [1][2].\n\n#### 2. Cost and Efficiency\n* **RAG:** It significantly reduces computational and financial costs compared to retraining large models [1].\n* **Fine-Tuning:** Full-model fine-tuning is computationally expensive and resource-intensive, though parameter-efficient techniques like low-rank adaptation (LoRA) and representation fine-tuning (ReFT) help lower space and compute requirements [2].\n\n#### 3. Factual Accuracy and Hallucinations\n* **RAG:** By grounding responses in external, authoritative sources, RAG improves factual accuracy and provides source transparency so users can verify information [1]. However, models can still occasionally misinterpret the retrieved context [1].\n* **Fine-Tuning:** While fine-tuning is excellent for transfer learning and teaching a model specific behaviors or downstream tasks, it can sometimes degrade robustness when faced with distribution shifts [2], and it does not inherently prevent hallucinations of factual data.\n\n#### 4. Domain Adaptation\n* **RAG:** Best suited when the model needs to reference large volumes of specific documents, unstructured data, or structured databases dynamically during inference [1][3].\n* **Fine-Tuning:** Best suited when you need to instill a specific response style, formatting structure, or specialized task capability into the model's core behavior rather than just supplying it with reference documents [2].",
+        "data": {},
+        "sources": [
+          1,
+          2,
+          3
+        ],
+        "unsourced": false,
+        "failed": false
+      }
+    },
+    {
+      "seq": 5,
+      "iteration": 3,
+      "kind": "decision",
+      "agent": "supervisor",
+      "task": null,
+      "text": null,
+      "flag": null,
+      "model": "gemini-3.5-flash-lite",
+      "tokens": {
+        "input": 1930,
+        "output": 106,
+        "thinking": 0
+      },
+      "llm_calls": 0,
+      "cached_calls": 1,
+      "cached": true,
+      "duration_ms": 0,
+      "decision": {
+        "action": "delegate",
+        "delegations": [
+          {
+            "worker": "reviewer",
+            "task": "Review the writer's draft for completeness, clarity, accurate citations, and balanced language. Return approve or revise with issues."
+          },
+          {
+            "worker": "fact_checker",
+            "task": "Check each cited sentence in the writer's draft against the source text provided in the research notes and sources [1], [2], [3]. Verify all [1], [2], [3] citations."
+          }
+        ],
+        "final": null,
+        "reason": "Delegate review and fact-checking of the writer's draft in parallel.",
+        "repaired": false,
+        "forced": false,
+        "preamble_chars": 0
+      },
+      "result": null
+    },
+    {
+      "seq": 6,
+      "iteration": 3,
+      "kind": "worker_result",
+      "agent": "reviewer",
+      "task": "Review the writer's draft for completeness, clarity, accurate citations, and balanced language. Return approve or revise with issues.",
+      "text": null,
+      "flag": null,
+      "model": "gemini-3.5-flash-lite",
+      "tokens": {
+        "input": 1349,
+        "output": 26,
+        "thinking": 0
+      },
+      "llm_calls": 0,
+      "cached_calls": 1,
+      "cached": true,
+      "duration_ms": 2,
+      "decision": null,
+      "result": {
+        "worker": "reviewer",
+        "content": "Verdict: APPROVE\nIssues: none\nBalance: none",
+        "data": {
+          "verdict": "approve",
+          "issues": [],
+          "balance_flags": []
+        },
+        "sources": [],
+        "unsourced": false,
+        "failed": false
+      }
+    },
+    {
+      "seq": 7,
+      "iteration": 3,
+      "kind": "worker_result",
+      "agent": "fact_checker",
+      "task": "Check each cited sentence in the writer's draft against the source text provided in the research notes and sources [1], [2], [3]. Verify all [1], [2], [3] citations.",
+      "text": null,
+      "flag": null,
+      "model": "gemini-3.5-flash-lite",
+      "tokens": {
+        "input": 3857,
+        "output": 697,
+        "thinking": 0
+      },
+      "llm_calls": 0,
+      "cached_calls": 1,
+      "cached": true,
+      "duration_ms": 1,
+      "decision": null,
+      "result": {
+        "worker": "fact_checker",
+        "content": "Fact check: 10 supported, 0 unsupported, 0 contradicted.",
+        "data": {
+          "claims": [
+            {
+              "sentence": "RAG:** This approach allows for real-time updates simply by modifying the external knowledge base (often stored via vector databases), eliminating the need to retrain the model [1].",
+              "status": "supported",
+              "source_n": 1,
+              "note": ""
+            },
+            {
+              "sentence": "Fine-Tuning:** This method adapts a pre-trained model by updating its parameters [2].",
+              "status": "supported",
+              "source_n": 2,
+              "note": ""
+            },
+            {
+              "sentence": "Because updating or retraining model parameters is required for new data, fine-tuning is less suitable for frequently changing information [1][2].",
+              "status": "supported",
+              "source_n": 1,
+              "note": ""
+            },
+            {
+              "sentence": "RAG:** It significantly reduces computational and financial costs compared to retraining large models [1].",
+              "status": "supported",
+              "source_n": 1,
+              "note": ""
+            },
+            {
+              "sentence": "Fine-Tuning:** Full-model fine-tuning is computationally expensive and resource-intensive, though parameter-efficient techniques like low-rank adaptation (LoRA) and representation fine-tuning (ReFT) help lower space and compute requirements [2].",
+              "status": "supported",
+              "source_n": 2,
+              "note": ""
+            },
+            {
+              "sentence": "RAG:** By grounding responses in external, authoritative sources, RAG improves factual accuracy and provides source transparency so users can verify information [1].",
+              "status": "supported",
+              "source_n": 1,
+              "note": ""
+            },
+            {
+              "sentence": "However, models can still occasionally misinterpret the retrieved context [1].",
+              "status": "supported",
+              "source_n": 1,
+              "note": ""
+            },
+            {
+              "sentence": "Fine-Tuning:** While fine-tuning is excellent for transfer learning and teaching a model specific behaviors or downstream tasks, it can sometimes degrade robustness when faced with distribution shifts [2], and it does not inherently prevent hallucinations of factual data.",
+              "status": "supported",
+              "source_n": 2,
+              "note": ""
+            },
+            {
+              "sentence": "RAG:** Best suited when the model needs to reference large volumes of specific documents, unstructured data, or structured databases dynamically during inference [1][3].",
+              "status": "supported",
+              "source_n": 1,
+              "note": ""
+            },
+            {
+              "sentence": "Fine-Tuning:** Best suited when you need to instill a specific response style, formatting structure, or specialized task capability into the model's core behavior rather than just supplying it with reference documents [2].",
+              "status": "supported",
+              "source_n": 2,
+              "note": ""
+            }
+          ]
+        },
+        "sources": [
+          1,
+          2
+        ],
+        "unsourced": false,
+        "failed": false
+      }
+    },
+    {
+      "seq": 8,
+      "iteration": 4,
+      "kind": "decision",
+      "agent": "supervisor",
+      "task": null,
+      "text": null,
+      "flag": null,
+      "model": "gemini-3.5-flash-lite",
+      "tokens": {
+        "input": 2164,
+        "output": 610,
+        "thinking": 0
+      },
+      "llm_calls": 0,
+      "cached_calls": 1,
+      "cached": true,
+      "duration_ms": 0,
+      "decision": {
+        "action": "final",
+        "delegations": [],
+        "final": "## When to Use RAG Instead of Fine-Tuning\n\nChoosing between Retrieval-Augmented Generation (RAG) and fine-tuning depends on your specific use case, particularly regarding data freshness, cost, domain adaptation, and factual accuracy. \n\n### Direct Answer\nUse RAG when your primary goal is to provide an LLM with access to external, frequently changing, or proprietary information while minimizing costs and hallucinations. Use fine-tuning when you need to adapt the model's tone, style, or behavior for specialized tasks rather than teaching it new facts.\n\n---\n\n### Key Comparison Factors\n\n#### 1. Data Freshness and Updates\n* **RAG:** This approach allows for real-time updates simply by modifying the external knowledge base (often stored via vector databases), eliminating the need to retrain the model [1].\n* **Fine-Tuning:** This method adapts a pre-trained model by updating its parameters [2]. Because updating or retraining model parameters is required for new data, fine-tuning is less suitable for frequently changing information [1][2].\n\n#### 2. Cost and Efficiency\n* **RAG:** It significantly reduces computational and financial costs compared to retraining large models [1].\n* **Fine-Tuning:** Full-model fine-tuning is computationally expensive and resource-intensive, though parameter-efficient techniques like low-rank adaptation (LoRA) and representation fine-tuning (ReFT) help lower space and compute requirements [2].\n\n#### 3. Factual Accuracy and Hallucinations\n* **RAG:** By grounding responses in external, authoritative sources, RAG improves factual accuracy and provides source transparency so users can verify information [1]. However, models can still occasionally misinterpret the retrieved context [1].\n* **Fine-Tuning:** While fine-tuning is excellent for transfer learning and teaching a model specific behaviors or downstream tasks, it can sometimes degrade robustness when faced with distribution shifts [2], and it does not inherently prevent hallucinations of factual data.\n\n#### 4. Domain Adaptation\n* **RAG:** Best suited when the model needs to reference large volumes of specific documents, unstructured data, or structured databases dynamically during inference [1][3].\n* **Fine-Tuning:** Best suited when you need to instill a specific response style, formatting structure, or specialized task capability into the model's core behavior rather than just supplying it with reference documents [2].\n\n### Sources\n1. Retrieval-augmented generation \u2014 https://en.wikipedia.org/wiki/Retrieval-augmented_generation\n2. Fine-tuning (deep learning) \u2014 https://en.wikipedia.org/wiki/Fine-tuning_(deep_learning)\n3. Vector database \u2014 https://en.wikipedia.org/wiki/Vector_database",
+        "reason": "The draft has been fully approved by the reviewer and successfully verified by the fact checker. I am ready to output the final answer with its source list.",
+        "repaired": false,
+        "forced": false,
+        "preamble_chars": 0
+      },
+      "result": null
+    }
+  ],
+  "approval": {
+    "required": false,
+    "draft": null,
+    "expires_at": null,
+    "revisions": 0
+  },
+  "memory_used": [],
+  "error": null,
+  "meta": {
+    "generated_by": "AI (Gemini)",
+    "models": {
+      "supervisor": "gemini-3.5-flash-lite",
+      "workers": "gemini-3.5-flash-lite"
+    },
+    "prompt_version": "2",
+    "llm_calls": 0,
+    "cached_calls": 8,
+    "tokens": {
+      "input": 15767,
+      "output": 2424
+    },
+    "est_cost_usd": 0.002546,
+    "created_at": "2026-10-10T16:13:28+00:00",
+    "started_at": "2026-10-10T16:13:28+00:00",
+    "finished_at": "2026-10-10T16:13:28+00:00",
+    "duration_ms": 0
+  },
+  "sample": true
+}

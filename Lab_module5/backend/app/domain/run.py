@@ -170,7 +170,7 @@ class ResearchRun:
         self._append(EntryKind.WORKER_RESULT, result.worker, task=task, result=result, meta=meta)
 
     def notice(self, text: str, flag: str | None = None, meta: CallMeta | None = None) -> None:
-        if flag in ("unsourced", "redacted", "unknown_citation", "possible_injection"):
+        if flag in ("unsourced", "redacted", "unknown_citation", "possible_injection", "truncated"):
             self._flag(flag)
         self._append(EntryKind.NOTICE, "system", text=text, flag=flag, meta=meta or CallMeta())
 

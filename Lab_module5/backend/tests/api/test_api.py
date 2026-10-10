@@ -31,7 +31,7 @@ def test_run_async_sync_and_wait_with_approval(api):
     view = a.client.get(body["status_url"]).json()
     assert view["status"] == "completed" and view["final_output"] and view["sample"] is False
     assert view["meta"]["llm_calls"] == 7 and view["meta"]["generated_by"] == "demo mode (no LLM)"
-    assert view["meta"]["est_cost_usd"] > 0 and view["meta"]["prompt_version"] == "1"
+    assert view["meta"]["est_cost_usd"] > 0 and view["meta"]["prompt_version"] == "2"
     assert view["sources"][0].keys() == {"n", "title", "url"}  # no extracts in the API
     assert view["transcript"][0]["decision"]["action"] == "delegate"
 

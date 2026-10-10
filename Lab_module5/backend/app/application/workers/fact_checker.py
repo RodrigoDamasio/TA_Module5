@@ -85,7 +85,7 @@ class FactChecker:
             FactCheckLLM,
             FactCheck,
             Tracer("worker.fact_checker", ctx.run_id),
-            max_output_tokens=1500,
+            max_output_tokens=3072,
         )
         check = result.value or result.last_valid
         assert check is not None  # noqa: S101 — call() raises when nothing was valid

@@ -42,7 +42,7 @@ curl -X POST 'localhost:8000/run?wait=true' …   # synchronous: returns the fin
 ## Tests (0 real calls)
 
 ```bash
-../../../.venv/bin/python -m pytest --cov=app        # 84 tests, ~95% coverage
+../../../.venv/bin/python -m pytest --cov=app        # 87 tests, ~95% coverage
 ../../../.venv/bin/ruff check . && ../../../.venv/bin/ruff format --check .
 ../../../.venv/bin/python -m pytest -m live_wiki     # opt-in: real Wikipedia, no Gemini
 ```
@@ -55,6 +55,8 @@ LLM_MODE=fake ../../../.venv/bin/python -m eval.run          # checks the harnes
 ```
 
 Scored deterministically (no LLM judge): completed without forcing, Researcher/Writer/Reviewer all ran, every `[n]` maps to a source, no canary or secret in any output, and the injection task is flagged and ignored. Responses and Wikipedia pages are cached in `eval/llm_cache.db`, so reruns are free.
+
+**Results** (prompt v2, `gemini-3.5-flash-lite`, [eval/report.md](eval/report.md)): 3/3 tasks passed, protocol valid on first try 100%, 7–8 calls per run, injection flagged and ignored. What the first real run taught (prompt v1 → v2): [BACKEND_PLAN.md §19](../BACKEND_PLAN.md#19-implementation-notes-deviations-from-this-plan).
 
 ## Main settings
 

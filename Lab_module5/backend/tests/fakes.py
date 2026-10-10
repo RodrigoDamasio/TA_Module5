@@ -86,8 +86,13 @@ class FakeLLM(DemoLLMClient):
         return [req.system for r, req in self.requests if r == role]
 
 
+RAG_TASK = "Topics: Retrieval-augmented generation; Fine-tuning\nFind facts about RAG and tuning."
+
+
 def delegate(
-    worker: str, task: str = "Find facts about RAG and fine-tuning.", reason: str = "Next."
+    worker: str,
+    task: str = RAG_TASK,
+    reason: str = "Next.",
 ) -> str:
     return f"REASON: {reason}\nDELEGATE: {worker}\nTASK: {task}"
 

@@ -57,7 +57,7 @@ class Reviewer:
             ReviewLLM,
             Review,
             Tracer("worker.reviewer", ctx.run_id),
-            max_output_tokens=1200,
+            max_output_tokens=3072,
         )
         review = result.value or result.last_valid
         assert review is not None  # noqa: S101 — call() raises when nothing was valid

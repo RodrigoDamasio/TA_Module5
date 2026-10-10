@@ -103,4 +103,4 @@ def test_prompt_files_use_only_known_placeholders():
         assert placeholders(text) <= known, path
         if path.parent.name == "workers" and path.stem.endswith("_task"):
             assert "{user_task}" in text or "{task}" in text, path
-    assert library.version == "1"
+    assert library.version == "2"

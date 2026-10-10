@@ -44,7 +44,7 @@ def test_happy_path_research_write_review_final(harness):
     events = h.events(run.id)
     assert events[0] == "run_started" and events[-1] == "completed"
     assert events.count("agent_started") == 7 and events.count("decision") == 4
-    assert run.prompt_version == "1" and run.models == {"supervisor": "demo", "workers": "demo"}
+    assert run.prompt_version == "2" and run.models == {"supervisor": "demo", "workers": "demo"}
 
 
 # S2
@@ -243,3 +243,22 @@ def test_forced_prompt_always_says_no_decisions_left(harness):
     h.submit(max_iterations=5)
     forced = h.llm.prompts("supervisor")[-1]
     assert "You have 0 decision(s) left." in forced and "You have no decisions left" in forced
+
+
+def test_cut_off_supervisor_reply_is_repaired(harness):
+    from app.domain.ports import LLMResponse
+
+    class CutOnce(FakeLLM):
+        cut = True
+
+        def generate(self, request):
+            r = super().generate(request)
+            if self.cut and "You are the Supervisor" in request.system:
+                self.cut = False
+                return LLMResponse(r.text, [], None, r.usage, "max_tokens")
+            return r
+
+    h = harness(llm=CutOnce())
+    run = h.submit()
+    assert run.status is RunStatus.COMPLETED and run.transcript[0].decision.repaired
+    assert "cut off" in h.llm.prompts("supervisor")[1]

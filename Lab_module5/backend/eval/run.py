@@ -71,13 +71,15 @@ def report(results: list[dict[str, Any]], model: str, version: str) -> str:
         "",
         f"Model `{model}` · prompt v{version} · {len(results)} tasks · deterministic checks only.",
         "",
-        "| Task | Status | Passed | Decisions | Repairs | Workers | Sources | Real calls |",
+        "| Task | Status | Passed | Decisions | Repairs | Workers | Sources "
+        "| Calls (real / cached) |",
         "|---|---|---|---|---|---|---|---|",
     ]
     for r in results:
         lines.append(
             f"| {r['id']} | {r['status']} | {'yes' if r['passed'] else 'NO'} | {r['decisions']} "
-            f"| {r['repairs']} | {', '.join(r['workers'])} | {r['sources']} | {r['llm_calls']} |"
+            f"| {r['repairs']} | {', '.join(r['workers'])} | {r['sources']} "
+            f"| {r['llm_calls']} / {r['cached_calls']} |"
         )
     decisions = sum(r["decisions"] for r in results) or 1
     real = [r["llm_calls"] + r["cached_calls"] for r in results]

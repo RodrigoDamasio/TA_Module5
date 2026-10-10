@@ -5,7 +5,7 @@ from app.application.prompts import PromptLibrary
 from app.domain.ports import LLMClient, LLMRequest, UserMessage
 from app.domain.transcript import WorkerResult
 
-from .base import WorkerContext, WorkerOutput, clean_citations, text_of, trim
+from .base import WorkerContext, WorkerOutput, clean_citations, text_of, trim, truncation
 
 
 class Writer:
@@ -40,15 +40,15 @@ class Writer:
             LLMRequest(
                 system=self._prompts.worker_system(self.name, ctx.canary),
                 messages=[UserMessage(user)],
-                max_output_tokens=1800,
+                max_output_tokens=4096,
                 thinking_budget=0,
                 model=ctx.model,
             )
         )
         draft, cited, unknown = clean_citations(text_of(response), {s.n for s in ctx.sources})
-        notices = (
-            [(f"Removed {len(unknown)} citation(s) to unknown sources.", "unknown_citation")]
-            if unknown
-            else []
-        )
+        notices = truncation(response, self.name)
+        if unknown:
+            notices.append(
+                (f"Removed {len(unknown)} citation(s) to unknown sources.", "unknown_citation")
+            )
         return WorkerOutput(WorkerResult(self.name, draft, {}, cited), notices)
