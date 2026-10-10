@@ -1,0 +1,9 @@
+tests/
+eval/llm_cache.db
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.db
+.coverage
+.e2e/

@@ -327,7 +327,7 @@ The Reviewer checklist (responsible AI, §11): answers the task · structure and
 
 | Step | Request (MediaWiki Action API, `https://{WIKI_LANG}.wikipedia.org/w/api.php`) |
 |---|---|
-| Query | Built **deterministically** from TASK: lowercase, drop stop words and punctuation, keep the first 8 terms. 0 hits → retry once with the first 4 terms |
+| Query | Built **deterministically** from TASK: lowercase, drop stop words and punctuation, keep the first 8 terms. 0 hits → retry with the first 4 terms, then with the user's task (§19) |
 | Search | `action=query&list=search&srsearch=<q>&srlimit=3&format=json&formatversion=2` → titles + page ids (snippets ignored) |
 | Extracts | One request per page: `action=query&prop=extracts|info&explaintext=1&inprop=url&pageids=<id>&format=json&formatversion=2` → plain text, trimmed to `WIKI_MAX_CHARS_PER_PAGE` at a paragraph boundary; canonical URL from `info` |
 
@@ -828,4 +828,16 @@ railway variables --set "FRONTEND_ORIGIN=http://localhost:3000,https://<vercel-d
 
 ## 19. Implementation notes (deviations from this plan)
 
-To be filled during implementation.
+Steps 1–6 implemented (0 real calls): 84 tests, 95% coverage, Ruff clean; a live `uvicorn` run in fake mode streamed a full run over SSE. Where the code differs from the plan above:
+
+| Plan | Implementation | Why |
+|---|---|---|
+| Researcher query: TASK (8 terms) → TASK (4 terms) | A third attempt with the **user's task** | A generic TASK ("Find the key facts needed…") found no article; the user's task names the topic |
+| Memory recall: top 3 by BM25 | Only the **newest memory per task** is a candidate | Two runs of the same task produced duplicate memories |
+| Reject with feedback → `running` | → `queued` (re-submitted to the runner), then `running` | The run is executed by the runner thread like a new one |
+| SSE event list (§14.4) | Adds `feedback` (the human's rejection, as a transcript entry) | The UI shows it in the conversation history |
+| `DailyCap` in the decorators | `DailyCapLLMClient` in `application/stats.py`, next to the meter it reads | Infrastructure does not import the application layer |
+| Forced prompt | Always shows "0 decisions left", whatever the trigger | Budget/protocol triggers used to show a non-zero count next to "no decisions left" |
+| Architecture: `httpx` only in `wikipedia.py` | Also in `gemini_client.py` | Copied Lab 4 adapter maps SDK `httpx` timeouts to `LLMTimeout` |
+| Evaluation secret | `eval/run.py` uses a fixed `PROMPT_SECRET` | Stable prompts → the evaluation cache stays valid across reruns |
+

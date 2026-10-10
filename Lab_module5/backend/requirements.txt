@@ -1,0 +1,5 @@
+fastapi>=0.141
+uvicorn>=0.53
+pydantic>=2.13
+google-genai>=2.25
+httpx>=0.28

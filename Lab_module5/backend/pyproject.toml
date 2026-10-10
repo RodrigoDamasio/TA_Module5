@@ -1,0 +1,26 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+markers = [
+    "live: calls the real Gemini API (spends quota) — run explicitly with -m live",
+    "live_wiki: calls the real Wikipedia API (no Gemini quota) — run with -m live_wiki",
+]
+addopts = "-m 'not live and not live_wiki'"
+
+[tool.coverage.run]
+source = ["app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# S = flake8-bandit security rules; S608 flags SQL built from strings (SQL injection)
+select = ["E", "F", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S603", "S105", "S106"]
+"eval/**" = ["S101"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header"]
