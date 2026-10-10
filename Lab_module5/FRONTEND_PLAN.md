@@ -274,4 +274,21 @@ Vercel needs no secret: the Gemini key stays on Railway.
 
 ## 13. Implementation notes (deviations from this plan)
 
-To be filled during implementation.
+Implemented: typecheck and ESLint clean, **45 unit/component tests (95 % lines)**, **6 E2E tests** against the fake backend (axe clean on idle, running, awaiting approval, completed and phone), production build. The backend addition (§7, `limits` in `/health`) is deployed.
+
+| Plan | Implementation | Why |
+|---|---|---|
+| `useRun` + `useReplay` | One `useRun(source)` with `source = live run id \| stored run to replay` | Live events and replay frames go through the same reducer and view updates |
+| A hook per thread turn | Only the **last** run is followed live (SSE); earlier runs are fetched once | Matches "one active run at a time"; no idle streams |
+| `useThread` with `useState` + effect | An external store read with `useSyncExternalStore` | No hydration mismatch (the server renders an empty thread) and no setState in an effect (React 19 lint) |
+| Separate files for `DecisionEntry`, `ResultEntry`, `AgentCard`, `SourceList`, `Thread` | Kept inside `Transcript.tsx`, `AgentBoard.tsx`, `FinalAnswer.tsx`, `ResearchApp.tsx`; `ReviewView` + `FactCheckTable` in `transcript/WorkerData.tsx` | Each is a few lines; fewer files |
+| Lab 4 `Tabs` component | A small tablist shown below `lg` only; panels are hidden by CSS | The panels are laid out side by side on wide screens: one DOM, no duplicate content |
+| E1 waits for each card to show *working* | E1 checks *working* once, then the feed's "started" / "finished" lines | The backend's SSE loop polls every 0.5 s and the fake agents answer in 0.3 s, so a short *working* state can arrive together with its result. With real calls (seconds each) every state is shown |
+
+**Bugs found by the tests and fixed:**
+- **`[1][2]` left the first citation unlinked (unit test).** The "already a link" lookahead also skipped `[1]` followed by `[`. Real Gemini answers use adjacent citations, so this would have shown in production.
+- **`?run=` could erase the saved thread (review).** During hydration the first render's thread is the empty server snapshot; the mount effect now reads the store directly.
+- **`Date.now()` during render (ESLint `react-hooks/purity`).** The quota-reset deadline is computed when `/health` answers.
+- **Activity feed did not follow the newest line, and the "Selected run" line showed under the phone's Answer tab** (manual check in Chrome).
+- **E2E SQLite WAL files (`.db-shm`, `.db-wal`) were committed.** Removed and ignored (`.gitignore`).
+
