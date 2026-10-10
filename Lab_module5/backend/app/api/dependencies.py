@@ -108,6 +108,15 @@ class Container:
                 "calls": self.meter.snapshot()["real"],
                 "limit": s.llm_daily_request_limit,
             },
+            "limits": {
+                "task_min_chars": s.task_min_chars,
+                "task_max_chars": s.task_max_chars,
+                "default_max_iterations": s.default_max_iterations,
+                "max_iterations_limit": s.max_iterations_limit,
+                "max_parallel_delegations": s.max_parallel_delegations,
+                "approval_timeout_min": s.approval_timeout_min,
+                "feedback_max_chars": 1000,
+            },
         }
 
 

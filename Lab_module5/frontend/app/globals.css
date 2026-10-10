@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Scroll regions contain their visually hidden captions (Lab 4 lesson). */
+[role="region"] {
+  position: relative;
+}
+
+/* Markdown answers (no typography plugin: a few explicit rules). */
+.markdown { line-height: 1.7; overflow-wrap: anywhere; }
+.markdown > * + * { margin-top: 0.75rem; }
+.markdown h1, .markdown h2 { font-size: 1.15rem; font-weight: 600; }
+.markdown h3, .markdown h4 { font-size: 1rem; font-weight: 600; }
+.markdown ul { list-style: disc; padding-left: 1.25rem; }
+.markdown ol { list-style: decimal; padding-left: 1.25rem; }
+.markdown li + li { margin-top: 0.25rem; }
+.markdown blockquote { border-left: 3px solid var(--color-zinc-300); padding-left: 0.75rem; color: var(--color-zinc-700); }
+.markdown code { font-family: var(--font-mono); font-size: 0.9em; }
+.markdown :not(pre) > code { background: var(--color-zinc-100); border-radius: 0.25rem; padding: 0 0.25rem; }
+.markdown th, .markdown td { border: 1px solid var(--color-zinc-300); padding: 0.25rem 0.5rem; text-align: left; vertical-align: top; }
+.markdown th { background: var(--color-zinc-100); font-weight: 600; }
+@media (prefers-color-scheme: dark) {
+  .markdown blockquote { border-color: var(--color-zinc-700); color: var(--color-zinc-300); }
+  .markdown :not(pre) > code, .markdown th { background: var(--color-zinc-800); }
+  .markdown th, .markdown td { border-color: var(--color-zinc-700); }
+}

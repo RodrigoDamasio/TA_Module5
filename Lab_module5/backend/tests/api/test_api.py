@@ -161,6 +161,9 @@ def test_read_endpoints(api):
     health = a.client.get("/health").json()
     assert health["status"] == "ok" and health["service_level"] == "reduced"
     assert health["models"] == {"supervisor": "demo", "workers": "demo"}
+    assert (
+        health["limits"]["task_max_chars"] == 2000 and health["limits"]["max_iterations_limit"] == 8
+    )
     agents = a.client.get("/agents").json()
     assert [x["name"] for x in agents] == [
         "supervisor",

@@ -15,3 +15,6 @@ node_modules/
 .coverage
 .pytest_cache/
 .ruff_cache/
+*.db-shm
+*.db-wal
+.e2e/
