@@ -421,7 +421,7 @@ Lab_module5/
 
 1. **Researcher sources — decided: Wikipedia API** (2026-10-10). Alternatives considered: Gemini Google Search grounding (free-tier limit for flash-lite unknown), model knowledge only (nothing to cite), scraping google.com (blocked from cloud IPs, against the terms).
 2. **Backend host — proposed: Railway, second service in the Module 4 project.** Railway's limit is on projects (2 on this account), not services; the free plan lists 3 services per project. Unknowns: this account's limits differ from the docs (2 projects and 1 GB per service), and the monthly free credit. Fallbacks: free the Module 3 project, or upgrade. Render (free, no persistent disk, sleeps when idle) is no longer the plan.
-3. **Extensions.** All four are designed in (§6), as in Labs 3 and 4. Say so if you prefer the core lab only.
+3. **Extensions — decided: all four** (2026-10-10): parallel workers, human approval, memory, more workers (Reviewer + Fact-Checker), as designed in §6.
 
 ## 17. Risks
 
