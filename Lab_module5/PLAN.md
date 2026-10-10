@@ -24,9 +24,9 @@ Output: a formatted final answer with numbered source links, the full **conversa
 | Delegation format | Plain-text protocol `DELEGATE` / `TASK` / `FINAL` (plus an optional `REASON`), read by a **strict deterministic parser** | Required by the lab. The parser, not the model, decides what is valid (§5) |
 | Framework | **Custom** (no LangGraph/CrewAI) | Same reasoning as Lab 3: full control, few dependencies, Labs 3–4 LLM layer reused |
 | LLM | Gemini free tier, `gemini-3.5-flash-lite`, through the Lab 3/4 adapter + decorators | Only working key; 3.8-flash allows only 20 requests/day |
-| Researcher sources | **Wikipedia API**, fetched **deterministically** before one summarizing LLM call (recommended — see §16) | Real, citable sources at 0 quota; "deterministic facts first, LLM second" (Lab 3) |
+| Researcher sources | **Wikipedia API** (decided), fetched **deterministically** by the app before one summarizing LLM call | Real, citable sources at 0 quota; "deterministic facts first, LLM second" (Lab 3). Scraping google.com was rejected: CAPTCHAs from cloud IPs, unstable HTML, against Google's terms, and arbitrary-page fetching (SSRF, injection surface) |
 | Job model | **Asynchronous runs** in SQLite: `POST /run` → `202` + run id; live progress over **SSE**; `?wait=true` returns the lab's synchronous result | A run makes 5–13 LLM calls (~20–60 s) and can pause for approval. Proven in Lab 3 |
-| Backend host | **Render** (recommended) or Railway — **your decision**, §16 | Railway's 2 free projects are both in use; the module teaches Render |
+| Backend host | **Railway**, as a **second service in the Module 4 project** (`taller-codebase-rag`) — pending confirmation, §16 | The limit is 2 projects, not services (free plan lists 3 services per project); Modules 3 and 4 stay live |
 
 ## 3. Architecture
 
@@ -38,7 +38,7 @@ flowchart LR
         fe["Next.js UI<br/>chat input · agent activity feed<br/>conversation history · final answer<br/>approval panel · samples"]
     end
 
-    subgraph host["☁️ Render or Railway"]
+    subgraph host["☁️ Railway"]
         api["FastAPI<br/>POST /run · GET /runs/{id}<br/>GET /runs/{id}/events (SSE)<br/>approve · reject<br/>GET /agents · /samples · /health"]
         sup["Supervisor loop<br/>protocol parser · iteration limit<br/>forced completion · budgets"]
         workers["Workers<br/>Researcher · Writer<br/>Reviewer · Fact-Checker"]
@@ -301,7 +301,7 @@ Lab_module5/
 ├── PLAN.md                 ← this file
 ├── BACKEND_PLAN.md         ← next
 ├── FRONTEND_PLAN.md
-├── backend/                → Render or Railway
+├── backend/                → Railway (service in the Module 4 project)
 │   ├── app/
 │   │   ├── domain/         # ResearchRun, TranscriptEntry, Decision, WorkerResult, errors, ports
 │   │   ├── application/    # supervisor loop, protocol parser, workers + registry, context,
@@ -345,19 +345,13 @@ Lab_module5/
 ## 15. External tasks (you)
 
 - Create the GitHub repo `RodrigoDamasio/TA_Module5` when you approve it.
-- **If Render:** create a Render account, connect GitHub, and allow access to `TA_Module5` (one time, in the browser). The service is defined in a `render.yaml` Blueprint in the repo.
+- Before deploy, check the Railway dashboard's usage page: a third always-on service uses more of the monthly free credit.
 - At deploy time, put `GOOGLE_API_KEY` on the backend (you run the command or paste it in the dashboard; it is never printed).
 
 ## 16. Open decisions (you)
 
-1. **Researcher sources.**
-   - (a) **Wikipedia API**, fetched by the app, then 1 summarizing call — *recommended*: real citations, 0 extra quota, testable offline.
-   - (b) Gemini's built-in Google Search grounding — broader and fresher, but its free-tier limits for flash-lite must be checked first, and it is harder to test without calls.
-   - (c) Model knowledge only — simplest, but nothing to cite and the Fact-Checker has nothing to check against.
-2. **Backend host.**
-   - (a) **Render free web service** — *recommended*: no Railway slot to free, and the module covers Render (`render.yaml`). Trade-offs to verify at deploy time: it sleeps after ~15 min idle (first request ~1 min, so the UI shows "waking up"), ~512 MB RAM (enough — no local models here), and **no persistent disk**, so runs, memory and caches reset on every restart or deploy (samples ship in the repo, so the demo is unaffected).
-   - (b) Railway: free the Module 3 or Module 4 project, or add a service to one of them — persistent `/data` volume as before.
-   - (c) Upgrade Railway.
+1. **Researcher sources — decided: Wikipedia API** (2026-10-10). Alternatives considered: Gemini Google Search grounding (free-tier limit for flash-lite unknown), model knowledge only (nothing to cite), scraping google.com (blocked from cloud IPs, against the terms).
+2. **Backend host — proposed: Railway, second service in the Module 4 project.** Railway's limit is on projects (2 on this account), not services; the free plan lists 3 services per project. Unknowns: this account's limits differ from the docs (2 projects and 1 GB per service), and the monthly free credit. Fallbacks: free the Module 3 project, or upgrade. Render (free, no persistent disk, sleeps when idle) is no longer the plan.
 3. **Extensions.** All four are designed in (§6), as in Labs 3 and 4. Say so if you prefer the core lab only.
 
 ## 17. Risks
@@ -369,5 +363,5 @@ Lab_module5/
 | Daily quota hit mid-run | Circuit breaker → forced completion from the best draft (`forced: true`), never a hang; reruns of finished steps cost 0 from the cache |
 | Prompt injection via Wikipedia or the task | Nonce-tagged data blocks, parser reads only the Supervisor's reply, canary, no acting tools, injection sample in the evaluation |
 | Wikipedia unavailable or rate-limited | Cache + "unsourced" fallback + reduced service level |
-| Render: no disk, cold starts | Samples in the repo; UI "waking up" state; documented in `DEPLOY.md` (or Railway, §16) |
+| Railway refuses a second service in the project, or the monthly credit runs out | Nothing breaks if it is refused; fall back to freeing the Module 3 project or upgrading (§16) |
 | Lab time (30 min nominal) | Core path first (phases 0–4 with fakes); extensions are thin additions on the same loop |
