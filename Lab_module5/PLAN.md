@@ -27,7 +27,7 @@ Output: a formatted final answer with numbered source links, the full **conversa
 | LLM | Gemini free tier, `gemini-3.5-flash-lite`, through the Lab 3/4 adapter + decorators | Only working key; 3.8-flash allows only 20 requests/day |
 | Researcher sources | **Wikipedia API** (decided), fetched **deterministically** by the app before one summarizing LLM call | Real, citable sources at 0 quota; "deterministic facts first, LLM second" (Lab 3). Scraping google.com was rejected: CAPTCHAs from cloud IPs, unstable HTML, against Google's terms, and arbitrary-page fetching (SSRF, injection surface) |
 | Job model | **Asynchronous runs** in SQLite: `POST /run` → `202` + run id; live progress over **SSE**; `?wait=true` returns the lab's synchronous result | A run makes 5–13 LLM calls (~20–60 s) and can pause for approval. Proven in Lab 3 |
-| Backend host | **Railway**, as a **second service in the Module 4 project** (`taller-codebase-rag`) — pending confirmation, §16 | The limit is 2 projects, not services (free plan lists 3 services per project); Modules 3 and 4 stay live |
+| Backend host | **Railway**, new project `taller-research-agents` (decided, §16) | Free plan = 2 projects; the Module 3 project is deleted to make room (your choice). Module 4 stays live |
 
 ## 3. Architecture
 
@@ -63,7 +63,7 @@ flowchart LR
 
 ### Deployment view (services)
 
-What runs where after Module 5 is deployed. **New** pieces are highlighted; Modules 3 and 4 are unchanged. Railway's 2-project limit holds because Module 5's backend is a **second service inside the Module 4 project**.
+What runs where after Module 5 is deployed. **New** pieces are highlighted. Railway stays at 2 projects: the Module 3 project (`taller-migration-agent`) is **deleted** before deploy, Module 4 is unchanged, and Module 5 gets its own project.
 
 ```mermaid
 flowchart TB
@@ -71,19 +71,18 @@ flowchart TB
     dev(["💻 Local machine<br/>railway up · vercel --prod"])
 
     subgraph vercel["☁️ Vercel (Hobby)"]
-        v3["taller-migration-agent<br/>Module 3 frontend"]
+        v3["taller-migration-agent<br/>Module 3 frontend<br/>(backend deleted)"]
         v4["taller-codebase-rag<br/>Module 4 frontend"]
         v5["taller-research-agents<br/>Module 5 frontend · Next.js<br/>NEXT_PUBLIC_API_URL (build time)"]
     end
 
     subgraph railway["☁️ Railway workspace (free plan · 2 projects)"]
-        subgraph p3["Project: taller-migration-agent"]
-            s3["service: backend<br/>Module 3 · FastAPI"]
-        end
         subgraph p4["Project: taller-codebase-rag"]
             s4["service: backend<br/>Module 4 · FastAPI"]
             vol4[("backend-volume<br/>/data · rag.db + index")]
-            subgraph s5["service: research-backend · Module 5 · FastAPI · 1 replica"]
+        end
+        subgraph p5["Project: taller-research-agents (new)"]
+            subgraph s5["service: backend · Module 5 · FastAPI · 1 replica"]
                 api5["API<br/>POST /run · SSE · /health"]
                 sup5["SUPERVISOR AGENT"]
                 res5["RESEARCHER<br/>AGENT"]
@@ -107,25 +106,26 @@ flowchart TB
     browser -- "REST + SSE (CORS: FRONTEND_ORIGIN)" --> api5
     s4 --- vol4
     api5 -- "runs · events · memory" --- vol5
-    s3 --> gemini
     s4 --> gemini
     s5 -- "every agent call (GOOGLE_API_KEY)" --> gemini
     res5 -- "read-only, cached" --> wiki
-    dev -. "railway up --service research-backend" .-> api5
+    dev -. "railway up --service backend" .-> api5
     dev -. "vercel --prod" .-> v5
 
     classDef new fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#14532d
     class v5,vol5,api5,sup5,res5,wri5,rev5,fc5 new
     style s5 fill:#f0fdf4,stroke:#15803d,stroke-width:2px
+    style p5 fill:#f7fef9,stroke:#15803d,stroke-dasharray: 4 2
 ```
 
 | Service | Platform · place | Config |
 |---|---|---|
-| `research-backend` (**new**) | Railway · project `taller-codebase-rag` | `railpack.json` (uvicorn `--proxy-headers`), `railway.json` health check `/health`, volume at `/data`, 1 replica. Variables: `GOOGLE_API_KEY` (set by you), `DATABASE_PATH=/data/research.db`, `FRONTEND_ORIGIN`, `LLM_MODE=real`, model names, limits |
-| `taller-research-agents` (**new**) | Vercel | `NEXT_PUBLIC_API_URL` = the `research-backend` URL, inlined at build time |
-| `backend` (Module 4), `backend` (Module 3), their frontends | unchanged | — |
+| `backend` (**new**) | Railway · new project `taller-research-agents` | `railpack.json` (uvicorn `--proxy-headers`), `railway.json` health check `/health`, volume at `/data`, 1 replica. Variables: `GOOGLE_API_KEY` (set by you), `DATABASE_PATH=/data/research.db`, `FRONTEND_ORIGIN`, `LLM_MODE=real`, model names, limits |
+| `taller-research-agents` (**new**) | Vercel | `NEXT_PUBLIC_API_URL` = the new backend URL, inlined at build time |
+| Module 4 `backend` + frontend | unchanged | — |
+| Module 3 project `taller-migration-agent` | **deleted** before deploy | Its Vercel frontend stays up but cannot reach a backend (like Modules 1 and 2) |
 
-The lab's four agents (Supervisor, Researcher, Writer, Reviewer — plus the Fact-Checker extension) are **components inside `research-backend`**, not separate services: each agent is a Python class with its own system prompt, and they talk through in-process function calls run by the supervisor loop. Every agent's LLM call goes to the same Gemini API with the same key. One service keeps the deploy within the free plan, and the lab does not require separate processes.
+The lab's four agents (Supervisor, Researcher, Writer, Reviewer — plus the Fact-Checker extension) are **components inside the Module 5 `backend` service**, not separate services: each agent is a Python class with its own system prompt, and they talk through in-process function calls run by the supervisor loop. Every agent's LLM call goes to the same Gemini API with the same key. One service keeps the deploy within the free plan, and the lab does not require separate processes.
 
 Each service has its own URL, variables, volume and deploys; sharing a project only groups them in the dashboard. Deploys run from the local machine with the CLIs (as in Labs 1–4), never automatically from GitHub.
 
@@ -370,7 +370,7 @@ Lab_module5/
 ├── PLAN.md                 ← this file
 ├── BACKEND_PLAN.md         ← next
 ├── FRONTEND_PLAN.md
-├── backend/                → Railway (service in the Module 4 project)
+├── backend/                → Railway (project taller-research-agents)
 │   ├── app/
 │   │   ├── domain/         # ResearchRun, TranscriptEntry, Decision, WorkerResult, errors, ports
 │   │   ├── application/    # supervisor loop, protocol parser, workers + registry, context,
@@ -414,13 +414,13 @@ Lab_module5/
 ## 15. External tasks (you)
 
 - Create the GitHub repo `RodrigoDamasio/TA_Module5` when you approve it.
-- Before deploy, check the Railway dashboard's usage page: a third always-on service uses more of the monthly free credit.
+- Module 3's Railway project is deleted at the start of Phase 7 (deploy), so it stays live until then.
 - At deploy time, put `GOOGLE_API_KEY` on the backend (you run the command or paste it in the dashboard; it is never printed).
 
 ## 16. Open decisions (you)
 
 1. **Researcher sources — decided: Wikipedia API** (2026-10-10). Alternatives considered: Gemini Google Search grounding (free-tier limit for flash-lite unknown), model knowledge only (nothing to cite), scraping google.com (blocked from cloud IPs, against the terms).
-2. **Backend host — proposed: Railway, second service in the Module 4 project.** Railway's limit is on projects (2 on this account), not services; the free plan lists 3 services per project. Unknowns: this account's limits differ from the docs (2 projects and 1 GB per service), and the monthly free credit. Fallbacks: free the Module 3 project, or upgrade. Render (free, no persistent disk, sleeps when idle) is no longer the plan.
+2. **Backend host — decided: Railway, new project `taller-research-agents`** (2026-10-10). The Module 3 project `taller-migration-agent` is deleted to stay within the 2-project limit; Module 4 stays live.
 3. **Extensions — decided: all four** (2026-10-10): parallel workers, human approval, memory, more workers (Reviewer + Fact-Checker), as designed in §6.
 
 ## 17. Risks
@@ -432,5 +432,5 @@ Lab_module5/
 | Daily quota hit mid-run | Circuit breaker → forced completion from the best draft (`forced: true`), never a hang; reruns of finished steps cost 0 from the cache |
 | Prompt injection via Wikipedia or the task | Nonce-tagged data blocks, parser reads only the Supervisor's reply, canary, no acting tools, injection sample in the evaluation |
 | Wikipedia unavailable or rate-limited | Cache + "unsourced" fallback + reduced service level |
-| Railway refuses a second service in the project, or the monthly credit runs out | Nothing breaks if it is refused; fall back to freeing the Module 3 project or upgrading (§16) |
+| Railway still refuses the new project right after the deletion | Deleted projects stay pending for ~48 h; Lab 4 found that naming the service and environment (`railway up --service backend --environment production`) works meanwhile |
 | Lab time (30 min nominal) | Core path first (phases 0–4 with fakes); extensions are thin additions on the same loop |
