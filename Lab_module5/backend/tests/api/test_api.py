@@ -169,7 +169,15 @@ def test_read_endpoints(api):
         "reviewer",
         "fact_checker",
     ]
-    assert a.client.get("/samples").json() == []
+    samples = a.client.get("/samples").json()
+    assert [x["id"] for x in samples] == [
+        "rag-vs-finetuning",
+        "sqlite-vs-postgres",
+        "http-caching-injection",
+    ]
+    stored = a.client.get("/samples/http-caching-injection").json()
+    assert stored["sample"] is True and stored["status"] == "completed"
+    assert "possible_injection" in stored["flags"] and stored["meta"]["prompt_version"] == "2"
     a.run()
     stats = a.client.get("/stats").json()
     assert stats["runs"] == {"completed": 1} and stats["llm"]["calls_today"] == 7
