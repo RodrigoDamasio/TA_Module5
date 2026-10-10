@@ -60,6 +60,59 @@ flowchart LR
     workers -- "cached responses · sources" --> db
 ```
 
+### Deployment view (services)
+
+What runs where after Module 5 is deployed. **New** pieces are highlighted; Modules 3 and 4 are unchanged. Railway's 2-project limit holds because Module 5's backend is a **second service inside the Module 4 project**.
+
+```mermaid
+flowchart TB
+    browser(["👤 Browser"])
+    dev(["💻 Local machine<br/>railway up · vercel --prod"])
+
+    subgraph vercel["☁️ Vercel (Hobby)"]
+        v3["taller-migration-agent<br/>Module 3 frontend"]
+        v4["taller-codebase-rag<br/>Module 4 frontend"]
+        v5["taller-research-agents<br/>Module 5 frontend · Next.js<br/>NEXT_PUBLIC_API_URL (build time)"]
+    end
+
+    subgraph railway["☁️ Railway workspace (free plan · 2 projects)"]
+        subgraph p3["Project: taller-migration-agent"]
+            s3["service: backend<br/>Module 3 · FastAPI"]
+        end
+        subgraph p4["Project: taller-codebase-rag"]
+            s4["service: backend<br/>Module 4 · FastAPI"]
+            vol4[("backend-volume<br/>/data · rag.db + index")]
+            s5["service: research-backend<br/>Module 5 · FastAPI · 1 replica<br/>health check /health"]
+            vol5[("research-volume<br/>/data · research.db")]
+        end
+    end
+
+    gemini["🤖 Gemini API"]
+    wiki["📚 Wikipedia API"]
+
+    browser -- "pages" --> v5
+    browser -- "REST + SSE (CORS: FRONTEND_ORIGIN)" --> s5
+    s4 --- vol4
+    s5 --- vol5
+    s3 --> gemini
+    s4 --> gemini
+    s5 -- "GOOGLE_API_KEY" --> gemini
+    s5 -- "read-only, cached" --> wiki
+    dev -. "railway up --service research-backend" .-> s5
+    dev -. "vercel --prod" .-> v5
+
+    classDef new fill:#dcfce7,stroke:#15803d,stroke-width:2px,color:#14532d
+    class v5,s5,vol5 new
+```
+
+| Service | Platform · place | Config |
+|---|---|---|
+| `research-backend` (**new**) | Railway · project `taller-codebase-rag` | `railpack.json` (uvicorn `--proxy-headers`), `railway.json` health check `/health`, volume at `/data`, 1 replica. Variables: `GOOGLE_API_KEY` (set by you), `DATABASE_PATH=/data/research.db`, `FRONTEND_ORIGIN`, `LLM_MODE=real`, model names, limits |
+| `taller-research-agents` (**new**) | Vercel | `NEXT_PUBLIC_API_URL` = the `research-backend` URL, inlined at build time |
+| `backend` (Module 4), `backend` (Module 3), their frontends | unchanged | — |
+
+Each service has its own URL, variables, volume and deploys; sharing a project only groups them in the dashboard. Deploys run from the local machine with the CLIs (as in Labs 1–4), never automatically from GitHub.
+
 ### The supervisor loop
 
 ```mermaid
